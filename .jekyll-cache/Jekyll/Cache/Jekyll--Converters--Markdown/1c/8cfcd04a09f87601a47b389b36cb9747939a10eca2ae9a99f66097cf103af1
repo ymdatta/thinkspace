@@ -1,0 +1,617 @@
+I"�`<h1 id="table-of-contents">Table of Contents</h1>
+
+<ol>
+  <li><a href="#org57f6ed9">Aim of this Experiment</a></li>
+  <li><a href="#orgdf0c986">Introduction</a></li>
+  <li><a href="#org9dd52b6">Preparation</a>
+    <ol>
+      <li><a href="#org2d8fdb6">Components Used</a></li>
+      <li><a href="#orga10a229">Board Setup:</a></li>
+      <li><a href="#orgc2d0c46">Frameworks/Modules/packages used</a></li>
+    </ol>
+  </li>
+  <li><a href="#org3855cc0">Testcases</a>
+    <ol>
+      <li><a href="#org9529368">Case 1:</a>
+        <ol>
+          <li><a href="#org9b4384d">Instructions:</a></li>
+          <li><a href="#orgf733723">Expected Output:</a></li>
+        </ol>
+      </li>
+      <li><a href="#org474aed0">Case 2:</a>
+        <ol>
+          <li><a href="#org9852433">Instructions:</a></li>
+          <li><a href="#org5e48455">Expected Output:</a></li>
+        </ol>
+      </li>
+      <li><a href="#orga8d3e7a">Case 3:</a>
+        <ol>
+          <li><a href="#org76ae6bd">Instructions</a></li>
+          <li><a href="#org5d88207">Expected Output</a></li>
+        </ol>
+      </li>
+    </ol>
+  </li>
+  <li><a href="#org57c84d5">Observations</a></li>
+  <li><a href="#orgd8de749">Analysis</a>
+    <ol>
+      <li><a href="#org4559e54">General</a></li>
+      <li><a href="#org9b2c33a">Hardware</a></li>
+      <li><a href="#org2e777ed">Software</a></li>
+    </ol>
+  </li>
+  <li><a href="#org5deae27">Questions from Assignment</a>
+    <ol>
+      <li><a href="#org4f38404">How do you distinguish an IR emitter from a receiver?</a></li>
+      <li><a href="#org331b92a">We can’t see IR. How do you check if emitter is working?</a></li>
+      <li><a href="#org12ee394">What is the frequency of IR receiver?</a></li>
+      <li><a href="#org82f5919">Why is the IR receiver built to a specific frequency?</a></li>
+      <li><a href="#orgca10ea8">Which pin on HDMI connector is used to detect connect/disconnect?</a></li>
+      <li><a href="#org8dea205">From the Device Tree, which GPIO controller manages the PIN?</a></li>
+    </ol>
+  </li>
+  <li><a href="#org7780c70">Deviations from Assignment</a></li>
+  <li><a href="#orge90f23c">Conclusions</a></li>
+  <li><a href="#orga0f5557">Future work</a></li>
+  <li><a href="#org8a1225f">References:</a></li>
+  <li><a href="#orgaec8ea8">Appendices:</a>
+    <ol>
+      <li><a href="#org91f046a">Makefile</a></li>
+      <li><a href="#org7960743">udev rules</a></li>
+      <li><a href="#orgb38f871">Code pieces</a></li>
+    </ol>
+  </li>
+</ol>
+
+<p><a id="org57f6ed9"></a></p>
+
+<h1 id="aim-of-this-experiment">Aim of this Experiment</h1>
+
+<p>To control the projector automatically from Raspberry Pi.</p>
+
+<p><a id="orgdf0c986"></a></p>
+
+<h1 id="introduction">Introduction</h1>
+
+<p>Raspberry Pi can be used to deliver presentations directly to our 
+class projector. When HDMI cable is unplugged at the end of the
+presentation, we have to use the remote control to switch off
+the projector. But, the Raspberry Pi can detect the HDMI disconnect
+and has the capability to emit IrDA signals to switch off the
+projector automatically.</p>
+
+<p>This experiment is about the case where we connect Infrared(IR)
+emitter to a Raspberry Pi board and program it so that the
+projector is turned off when HDMI cable connected to the Raspberry Pi
+is unplugged.</p>
+
+<p><a id="org9dd52b6"></a></p>
+
+<h1 id="preparation">Preparation</h1>
+
+<p><a id="org2d8fdb6"></a></p>
+
+<h2 id="components-used">Components Used</h2>
+
+<ul>
+  <li>Raspberry Pi 2 Model B V1.1</li>
+  <li>TSOP1738 IR Receiver</li>
+  <li>IR LED transmitter</li>
+  <li>NPN transistor</li>
+  <li>Resistors</li>
+  <li>MF, FF Jumper wires</li>
+</ul>
+
+<p><a id="orga10a229"></a></p>
+
+<h2 id="board-setup">Board Setup:</h2>
+
+<ul>
+  <li>
+    <p>Raspberry pi was configured to receive IR signals via GPIO pin 23,
+and to transmit signals via GPIO pin 22.</p>
+
+    <p>This was done in /boot/config.txt so that these configurations
+can be loaded at boot time.</p>
+
+    <p><img src="/assets/GPIO/boot_gpio.png" alt="img" /></p>
+  </li>
+  <li>
+    <p>We can connect an IR LED directly to GPIO 22 (for transmitting) on
+Raspberry Pi, but the LED’s output signal will be too weak, and
+the IR transmitter will have a very limited range.</p>
+
+    <p>We solve this using a transistor, which amplifies the current output
+from a pin, thus increasing IR LED’s signal strength.[1]</p>
+  </li>
+</ul>
+
+<p><a id="orgc2d0c46"></a></p>
+
+<h2 id="frameworksmodulespackages-used">Frameworks/Modules/packages used</h2>
+
+<ul>
+  <li>
+    <p>When kernel was upgraded from 4.19 to 4.19.x, the lirc-rpi module
+got replaced by gpio_ir_tx and gpio_ir_recv modules.</p>
+
+    <p><img src="/assets/GPIO/mod_gpio.png" alt="img" /></p>
+  </li>
+  <li>
+    <p><strong>ir-ctl</strong>[2] is used to receive and transmit raw IR signals.</p>
+  </li>
+</ul>
+
+<p><a id="org3855cc0"></a></p>
+
+<h1 id="testcases">Testcases</h1>
+
+<p><a id="org9529368"></a></p>
+
+<h2 id="case-1">Case 1:</h2>
+
+<p><a id="org9b4384d"></a></p>
+
+<h3 id="instructions">Instructions:</h3>
+
+<ul>
+  <li>SSH into Raspberry Pi.</li>
+  <li>Connect an IR receiver to the GPIO 23.</li>
+  <li>Open the Terminal, and wait for the signal by doing
+<em>ir-ctl –receive=signal.txt –device=/dev/lirc-rx</em></li>
+  <li>Send an IR signal to the receiver by pointing an IR transmitter
+in the IR receiver direction. (Use projector’s remote for this)</li>
+</ul>
+
+<p><a id="orgf733723"></a></p>
+
+<h3 id="expected-output">Expected Output:</h3>
+
+<ul>
+  <li>Open signal.txt, it contains raw IR signal, in the form of 
+alternative spaces and pulses.</li>
+</ul>
+
+<p><a id="org474aed0"></a></p>
+
+<h2 id="case-2">Case 2:</h2>
+
+<p><a id="org9852433"></a></p>
+
+<h3 id="instructions-1">Instructions:</h3>
+
+<ul>
+  <li>To be done after Case 1</li>
+  <li>SSH into Raspberry Pi.</li>
+  <li>Connect an IR transmitter by method mentioned in Board setup.</li>
+  <li>Point the transmitter in the projector direction.</li>
+  <li>Open the Terminal, send the signal received in Case 1 – signal.txt
+by doing, <em>ir-ctl –send=signal.txt –device=/dev/lirc1/</em></li>
+</ul>
+
+<p><a id="org5e48455"></a></p>
+
+<h3 id="expected-output-1">Expected Output:</h3>
+
+<ul>
+  <li>Projector should behave in the same way as it would when it receives
+the same signal from the remote controller.
+(For Ex: If we send a power signal via IR transmitter, the projector
+should turn off)</li>
+</ul>
+
+<p><a id="orga8d3e7a"></a></p>
+
+<h2 id="case-3">Case 3:</h2>
+
+<p><a id="org76ae6bd"></a></p>
+
+<h3 id="instructions-2">Instructions</h3>
+
+<ul>
+  <li>ssh into the Raspbery Pi</li>
+  <li>Insert the hdmi_rpi.ko module in the kernel.</li>
+  <li>Check whether the module is inserted by doing <em>lsmod</em>.</li>
+  <li>ssh out of the Raspberry Pi</li>
+  <li>Prepare the circuit according to the Board setup section mentioned above.</li>
+  <li>Attach the HDMI cable to the Raspberry Pi.</li>
+  <li>Switch on the monitor.</li>
+  <li>Reboot the Raspberry Pi with HDMI cable attached if there’s no display
+on the screen.</li>
+  <li>IR LED emitter on the Board should be pointed towards projector.</li>
+  <li>Unplug the HDMI cable.</li>
+</ul>
+
+<p><a id="org5d88207"></a></p>
+
+<h3 id="expected-output-2">Expected Output</h3>
+
+<ul>
+  <li>When HDMI cable is unplugged, the projector should automatically
+be switched off in 3-4 seconds.</li>
+</ul>
+
+<p><a id="org57c84d5"></a></p>
+
+<h1 id="observations">Observations</h1>
+
+<ul>
+  <li>
+    <p>Device tree blobs are stored in /boot directory. From our model name
+on the Board, we can find the blob file used.</p>
+
+    <p><img src="/assets/GPIO/dt_blob.png" alt="img" /></p>
+  </li>
+  <li>
+    <p>We can get information from device tree blob using <em>fdtget</em> utility[3].</p>
+
+    <p>For example, to get list of all properties of hdmi node:</p>
+
+    <p><img src="/assets/GPIO/hdmi_props.png" alt="img" /></p>
+
+    <p>To get gpio information regarding particular property of the hdmi node,
+we see that there is a property called <em>hpd-gpios</em>. If we look through it:</p>
+
+    <p><img src="/assets/GPIO/hpd_gpios.png" alt="img" /></p>
+
+    <p>The first value indicates the phandle of the controller, second value
+indicates the GPIO pin used to detect HDMI connection and the third value
+indicates the default value of the pin.</p>
+  </li>
+  <li>
+    <p>If we look at the GPIO pin’s value, after exporting it to userspace, we
+see that it’s value changes whenever HDMI is plugged/unplugged. It starts
+with 1 (see image above and previous point), and when HDMI is plugged, it’s 
+value becomes 0 and becomes 1 when it’s unplugged.</p>
+
+    <p><img src="/assets/GPIO/unplug_hdmi.png" alt="img" /></p>
+  </li>
+  <li>
+    <p>When i ran a function which sleeps in the timer callback, i got this error
+and the system froze.</p>
+
+    <p><img src="/assets/GPIO/bug_sleep.png" alt="img" /></p>
+  </li>
+  <li>
+    <p><em>tvservice</em> utility can be used to get information about the HDMI. It internally
+processes the EDID blocks to get information.</p>
+
+    <p><img src="/assets/GPIO/tvservice.png" alt="img" /></p>
+
+    <p>We can also monitor the plugging and unplugging events using <em>tvservice -M</em>.</p>
+
+    <p><img src="/assets/GPIO/tv_mon.png" alt="img" /></p>
+
+    <p>We can get EDID tag using <em>tvservice</em> utility. We can then display the
+binary in suitable format.</p>
+
+    <p><img src="/assets/GPIO/tv_edid.png" alt="img" /></p>
+  </li>
+  <li>
+    <p>From the kernel module, i have written, when hdmi is unplugged from the
+Raspberry pi, an uevent is generated with specific environment.</p>
+
+    <p><img src="/assets/GPIO/udev.png" alt="img" /></p>
+
+    <p>In the above picture, we see that when HDMI is unplugged a ‘change’ event
+is generated on the device.</p>
+  </li>
+  <li>
+    <p>From the kernel module i have written, when hdmi is unplugged, i have
+included a <em>printk</em> statement, so that it prints out ‘HDMI Unplugged’
+to dmesg.</p>
+
+    <p><img src="/assets/GPIO/dmesg.png" alt="img" /></p>
+  </li>
+</ul>
+
+<p><a id="orgd8de749"></a></p>
+
+<h1 id="analysis">Analysis</h1>
+
+<p><a id="org4559e54"></a></p>
+
+<h2 id="general">General</h2>
+
+<ul>
+  <li>
+    <p>When the Raspberry Pi was booted, two device files were created in <em>/dev</em> directory. They
+were <em>lirc0</em> and <em>lirc1</em>. When i was transmitting the signal, for the first time, i used
+<em>lirc0</em>, it worked well. When i booted my system again, i tried to use <em>lirc0</em> again for
+transmitting, but i got the error by saying that, <strong>dev/lirc0</strong> cannot transmit.</p>
+
+    <p>After reading through gpio-ir, i realised that creation of receiver and transmitter devices
+is automatic. i.e, we cannot always be sure that <em>lirc1</em> is a receiver or transmitter.</p>
+
+    <p>I was able to solve this problem with the help of <em>ir-ctl</em>. It has a option called ‘features’
+which lists the features of the lirc device.</p>
+
+    <p><img src="/assets/GPIO/irctl_f_lirc.png" alt="img" /></p>
+  </li>
+</ul>
+
+<p><a id="org9b2c33a"></a></p>
+
+<h2 id="hardware">Hardware</h2>
+
+<ul>
+  <li>
+    <p>When i first used TSOP1738 IR Receiver, i thought the middle pin was the signal, and
+the other two were Vcc and Ground. I didn’t have any reason behind this, i just with
+this.</p>
+
+    <p>I then tried testing this receiver, i didn’t get any information from the sensor,
+my first thought was that maybe the sensor is not a good one, i tried using a different
+sensor, even then i was not able to receive any data. I was sending IR signals through
+the remote, my second though was maybe my remote is wrong. But this was debunked when
+i checked the LED of remote through my mobile camera which didn’t have any filters. I 
+then realised that there is no problem with my remote.</p>
+
+    <p>This went on for a long time, when i was discussing this with a senior of mine, he 
+asked me whether i consulted data sheet of TSOP sensor before using it. When i checked
+the data sheet of the sensor, i realised that my assumption about the which pins are which,
+of the signal were wrong. I then made correct connections, i was able to receive IR data
+from the remote.</p>
+  </li>
+  <li>
+    <p>Another problem i faced was with the IR LED transmitter. When i tried to send the signal
+i received via TSOP sensor, there was no change in the projectors status. (Signal was
+received from the projector’s remote)</p>
+
+    <p>But, when i tried to receive this signal from the TSOP sensor (i saved the signal from the
+projector in a file, and this file was used for sending), i was able to receive the signal,
+i wasn’t able to understand why the projector was not receiving.</p>
+
+    <p>After a while, when i checked the IR LED from my mobile phone’s camera, which didn’t have
+any IR filter, i saw a very dim light. I realised that the strength of the signal is not
+enough to reach the projector. I then used a transistor to solve this problem, and then
+when i transmitted a signal, projector was able to receive it.</p>
+  </li>
+</ul>
+
+<p><a id="org2e777ed"></a></p>
+
+<h2 id="software">Software</h2>
+
+<ul>
+  <li>
+    <p>I have written a platform device called <em>hdmi</em>, which has a sysfs attribute called state,
+which when read gives either 0 or 1. 1 meaning no HDMI connected, and 0 meaning HDMI is
+connected.</p>
+  </li>
+  <li>
+    <p>One of the most interesting problem in this assignment was polling, how do we poll, so that
+regardless of when HDMI is unplugged, the device <em>hdmi</em> can recognize it. The answer to this
+was timers.</p>
+
+    <p>Another interesting problem was detecting the HDMI device itself.</p>
+
+    <p>To solve the second problem, i went through the firmware code of Raspberry pi, looking for
+an interface which may help with my problem, i then found the interface</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>int rpi_firmware_property(struct rpi_firmware *fw,
+			  u32 tag, void *tag_data, size_t buf_size)
+</code></pre></div>    </div>
+
+    <p>Now going through the accompanying documentation [4, 5]. I realised that this function
+reads the specified EDID block from attached HDMI/DVI device[4, 5]. I then started to
+use this function in the timer, but when i began to run the module, i got the following
+error and laptop froze.</p>
+
+    <p><img src="/assets/GPIO/bug_sleep.png" alt="img" /></p>
+
+    <p>I began searching for the reason behind this error, i talked to few people from the
+#kernelnewbies channel of IRC. They then suggested to look at the error closely, and
+then i saw at the top there was “BUG: scheduling while atomic”. I then realised that
+there was scheduling happening where it is supposed to be atomic. But, when i looked
+at my code, there was no scheduling/wait. I then went into <em>rpi_firmware_property()</em>
+call, i.e, what is called underneath, these were the calls.</p>
+
+    <p><em>rpi_firmware_property()</em> -&gt; <em>rpi_firmware_property_list()</em> -&gt; <em>rpi_firmware_transaction()</em>.</p>
+
+    <p>In the <em>rpi_firmware_transaction</em>, there was a mutex lock. Now, i was able to connect
+the pieces and realised this was the reason for scheduling in the timer. So, i searched
+for something similar which executes at a particular time, but where the execution
+can have locks (or) can sleep etc. Reading LDD3[7], from chapter 7[7], i realised
+that we can use workqueues to solve this problem.</p>
+
+    <p>So, every time a timer expires, work is pushed to the workqueue. This work is nothing
+but finding whether HDMI is connected or not. After making it work now, using workqueues,
+i realised that we can’t rely on EDID blocks to know whether the HDMI is connected or not.
+We can only get information about the connected device like Vendor ID, Product name etc</p>
+
+    <p>So, i tried to search for another method. By this time, i started looking into device tree
+and realised that i can use GPIO 46, to detect whether the HDMI is connected or not.</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>static int gpio_get_value(unsigned int gpio)
+</code></pre></div>    </div>
+
+    <p>It returns 0 if HDMI is connected, and 1 if it isn’t.</p>
+  </li>
+  <li>
+    <p>We don’t need to create a device to detect HDMI, but to send the event detection to user
+space we need to.</p>
+
+    <p>From the device, the uevent can be sent using <em>kobject_event_env()</em>. This was really interesting
+and i realised this is the way how actually uevents are sent from kernel space code.</p>
+  </li>
+</ul>
+
+<p>With this, we now have a device which will send a uevent whenever it detects that HDMI is unplugged.</p>
+
+<p><a id="org5deae27"></a></p>
+
+<h1 id="questions-from-assignment">Questions from Assignment</h1>
+
+<p><a id="org4f38404"></a></p>
+
+<h2 id="how-do-you-distinguish-an-ir-emitter-from-a-receiver">How do you distinguish an IR emitter from a receiver?</h2>
+
+<p>We can supply a voltage to the LED, and check using the photo camera
+to see if light emitted is IR.</p>
+
+<p>Generally speaking IR receiver sensors(like TSOP) have three legs but IR emitter LED’s
+only have two. So, that’s one more way. Also, if IR Receiver is a two legged diode, then
+it would be mostly in black color as opposed to emitter which is generally not dark.</p>
+
+<p><a id="org331b92a"></a></p>
+
+<h2 id="we-cant-see-ir-how-do-you-check-if-emitter-is-working">We can’t see IR. How do you check if emitter is working?</h2>
+
+<p>We can use our mobile phone’s camera to check that. Of course it shouldn’t have
+IR filters.</p>
+
+<p><a id="org12ee394"></a></p>
+
+<h2 id="what-is-the-frequency-of-ir-receiver">What is the frequency of IR receiver?</h2>
+
+<p>From the Wikipedia article [8], IR frequency is between 33 and 40 kHz or 
+between 50 and 60 kHz.  From the article, the most frequently used NEC protocol,
+specifies a frequency of 38kHz.</p>
+
+<p><a id="org82f5919"></a></p>
+
+<h2 id="why-is-the-ir-receiver-built-to-a-specific-frequency">Why is the IR receiver built to a specific frequency?</h2>
+
+<p>If the IR receiver is not built for a specific frequency, it picks signals from
+all the heat sources around it. So, to avoid picking those signals, its built
+at a specific frequency. [9, 10]</p>
+
+<p><a id="orgca10ea8"></a></p>
+
+<h2 id="which-pin-on-hdmi-connector-is-used-to-detect-connectdisconnect">Which pin on HDMI connector is used to detect connect/disconnect?</h2>
+
+<p>Pin 19.</p>
+
+<p>From the schematic [11],</p>
+
+<p><img src="/assets/GPIO/schem.png" alt="img" /></p>
+
+<p><a id="org8dea205"></a></p>
+
+<h2 id="from-the-device-tree-which-gpio-controller-manages-the-pin">From the Device Tree, which GPIO controller manages the PIN?</h2>
+
+<p>From the device tree, getting information using <em>fdtget</em> of hdmi node’s
+hpd-gpios property</p>
+
+<p><img src="/assets/GPIO/hpd_gpios.png" alt="img" /></p>
+
+<p>The first value indicates the phandle of the controller, second value
+indicates the GPIO pin used to detect HDMI connection and the third value
+indicates the default value of the pin.</p>
+
+<p><img src="/assets/GPIO/qgpio.png" alt="img" /></p>
+
+<p>The above image shows the gpio controller which handles HDMI detection
+gpio pin. (We can see that phandle value is 0x0d (= 13 in base 10), which is same as
+first parameter of <em>hpd-gpios</em> property in device tree)</p>
+
+<p><a id="org7780c70"></a></p>
+
+<h1 id="deviations-from-assignment">Deviations from Assignment</h1>
+
+<ul>
+  <li>
+    <p>The Assignment also asked to automatically power on the projector
+when the HDMI wire is plugged into Raspberry Pi.</p>
+
+    <p>This is not feasible because, unless the projector is powered on
+HDMI’s GPIO doens’t receive a signal. This was checked by looking
+for changes in the <em>value</em> attribute of GPIO 46 Pin.</p>
+
+    <p>So, unless we plug in the HDMI cable and power the projector on,
+the HDMI remains undetected by GPIO.</p>
+  </li>
+</ul>
+
+<p><a id="orge90f23c"></a></p>
+
+<h1 id="conclusions">Conclusions</h1>
+
+<ul>
+  <li>
+    <p>I felt this project was very close to a real life project, because
+we were writing logic to control an actual device. I learned a lot
+from it.</p>
+  </li>
+  <li>
+    <p>I was able to appreciate the facilities the kernel provides for
+talking to devices.</p>
+  </li>
+  <li>
+    <p>I realised that the place to get information is from the code itself,
+not from googling for it.</p>
+  </li>
+  <li>
+    <p>I was able to appreciate the power of the modules, what it can do,
+the fact that we can send a uevent from the device itself felt very
+powerful to me.</p>
+  </li>
+  <li>
+    <p>I made sure that i won’t using any userspace code as far as detecting
+the HDMi event and sending uevent is concerned. This was one of my design
+decision, and due to this i learnt a lot. We could have just written
+a bash script on <em>tvservice</em>, but i chose to write a kernel module
+and appreciate the facilities the kernel provides.</p>
+  </li>
+  <li>
+    <p>Though i used GPIO pin for detecting presence of HDMI, and given the
+fact that the pin used may be different for different boards, i still
+feel that this is the elegant way, because we are getting information
+directly from the device tree.</p>
+  </li>
+</ul>
+
+<p><a id="orga0f5557"></a></p>
+
+<h1 id="future-work">Future work</h1>
+
+<p>Right now, because of restrictions to other classrooms with projectors, 
+this was tested on only one projector, this has to be tested on different
+projectors with different signals.</p>
+
+<p><a id="org8a1225f"></a></p>
+
+<h1 id="references">References:</h1>
+
+<ol>
+  <li>Dmitri Popov. IR Remote Control “ Raspberry Pi Geek. Retrieved November 21, 2019 from <a href="http://www.raspberry-pi-geek.com/Archive/2015/10/Raspberry-Pi-IR-remote">http://www.raspberry-pi-geek.com/Archive/2015/10/Raspberry-Pi-IR-remote</a></li>
+  <li>Anon. Home. Retrieved November 21, 2019 from <a href="https://www.mankier.com/1/ir-ctl">https://www.mankier.com/1/ir-ctl</a></li>
+  <li>Anon. FDTGET(1) - man page online: user commands. Retrieved November 21, 2019 from <a href="https://www.venea.net/man/fdtget(1)">https://www.venea.net/man/fdtget(1)</a></li>
+  <li>Raspberrypi. raspberrypi/documentation. Retrieved November 21, 2019 from <a href="https://github.com/raspberrypi/documentation/tree/JamesH65-mailbox_docs/configuration/mailboxes">https://github.com/raspberrypi/documentation/tree/JamesH65-mailbox_docs/configuration/mailboxes</a></li>
+  <li>Raspberrypi. raspberrypi/firmware. Retrieved November 21, 2019 from <a href="https://github.com/raspberrypi/firmware/wiki/Mailbox-property-interface">https://github.com/raspberrypi/firmware/wiki/Mailbox-property-interface</a></li>
+  <li>Greg Kroah-Hartman, Alessandro Rubini, and Jonathan Corbet. Linux Device Drivers, 3rd Edition. Retrieved November 21, 2019 from <a href="https://www.oreilly.com/library/view/linux-device-drivers/0596005903/">https://www.oreilly.com/library/view/linux-device-drivers/0596005903/</a></li>
+  <li>Greg Kroah-Hartman, Alessandro Rubini, and Jonathan Corbet. Linux Device Drivers, 3rd Edition. Retrieved November 21, 2019 from <a href="https://www.oreilly.com/library/view/linux-device-drivers/0596005903/ch07.html">https://www.oreilly.com/library/view/linux-device-drivers/0596005903/ch07.html</a></li>
+  <li>Anon. 2019. Consumer IR. (November 2019). Retrieved November 21, 2019 from <a href="https://en.wikipedia.org/wiki/Consumer_IR">https://en.wikipedia.org/wiki/Consumer_IR</a></li>
+  <li>Anon.Retrieved November 21, 2019 from <a href="https://learn.sparkfun.com/tutorials/ir-communication/all">https://learn.sparkfun.com/tutorials/ir-communication/all</a></li>
+  <li>Chris Young. Infrared Transmit and Receive on Circuit Playground Express in C . Retrieved November 21, 2019 from <a href="https://learn.adafruit.com/infrared-transmit-and-receive-on-circuit-playground-express-in-c-plus-plus-2/understanding-infrared-signals">https://learn.adafruit.com/infrared-transmit-and-receive-on-circuit-playground-express-in-c-plus-plus-2/understanding-infrared-signals</a></li>
+  <li>Anon. Schematics. Retrieved November 21, 2019 from <a href="https://www.raspberrypi.org/documentation/hardware/raspberrypi/schematics/README.md">https://www.raspberrypi.org/documentation/hardware/raspberrypi/schematics/README.md</a> (Raspberry Pi 2 Model B)</li>
+</ol>
+
+<p><a id="orgaec8ea8"></a></p>
+
+<h1 id="appendices">Appendices:</h1>
+
+<p><a id="org91f046a"></a></p>
+
+<h2 id="makefile">Makefile</h2>
+
+<p><img src="/assets/GPIO/Makefile.png" alt="img" /></p>
+
+<p><a id="org7960743"></a></p>
+
+<h2 id="udev-rules">udev rules</h2>
+
+<p><img src="/assets/GPIO/97-hdmi.rules.png" alt="img" /></p>
+
+<p><a id="orgb38f871"></a></p>
+
+<h2 id="code-pieces">Code pieces</h2>
+
+<p><img src="/assets/GPIO/code_1.png" alt="img" /></p>
+
+<p><img src="/assets/GPIO/code_2.png" alt="img" /></p>
+
+<p>where envp is <em>char *envp[] = {“SUBSYSTEM=hdmi”, NULL};</em>.</p>
+
+:ET

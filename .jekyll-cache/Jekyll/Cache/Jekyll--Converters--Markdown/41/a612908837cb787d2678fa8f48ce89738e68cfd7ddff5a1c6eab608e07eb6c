@@ -1,0 +1,789 @@
+I"~`<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#sec-1">1. Problem Statement:</a>
+<ul>
+<li><a href="#sec-1-1">1.1. Introduction:</a></li>
+<li><a href="#sec-1-2">1.2. Problem:</a></li>
+</ul>
+</li>
+<li><a href="#sec-2">2. Motivation:</a></li>
+<li><a href="#sec-3">3. Dataset:</a>
+<ul>
+<li><a href="#sec-3-1">3.1. Data Resource:</a></li>
+<li><a href="#sec-3-2">3.2. Data Overview:</a></li>
+</ul>
+</li>
+<li><a href="#sec-4">4. Approach:</a>
+<ul>
+<li><a href="#sec-4-1">4.1. How probability was calculated?</a></li>
+</ul>
+</li>
+<li><a href="#sec-5">5. Analysis of Dataset:</a>
+<ul>
+<li><a href="#sec-5-1">5.1. Visualization</a>
+<ul>
+<li><a href="#sec-5-1-1">5.1.1. Count of number of comments in each class.</a></li>
+<li><a href="#sec-5-1-2">5.1.2. Pie chart of Label Distribution over comments(without "none" category).</a></li>
+<li><a href="#sec-5-1-3">5.1.3. Count for each label combination.</a></li>
+<li><a href="#sec-5-1-4">5.1.4. Correlation matrix.</a></li>
+<li><a href="#sec-5-1-5">5.1.5. Digging more into correlations using Venn Diagrams.</a></li>
+<li><a href="#sec-5-1-6">5.1.6. Word analysis for each cateogires.</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#sec-6">6. Feature Engineering</a>
+<ul>
+<li><a href="#sec-6-1">6.1. Cleaning the comments</a></li>
+<li><a href="#sec-6-2">6.2. Stemmers and Lemmatizers</a></li>
+<li><a href="#sec-6-3">6.3. Vectorization</a></li>
+<li><a href="#sec-6-4">6.4. Adding data related features</a></li>
+</ul>
+</li>
+<li><a href="#sec-7">7. Model Building</a></li>
+<li><a href="#sec-8">8. Training, Validation and Test Metrics.</a>
+<ul>
+<li><a href="#sec-8-1">8.1. Training and Validation split:</a></li>
+<li><a href="#sec-8-2">8.2. Test Metric:</a></li>
+<li><a href="#sec-8-3">8.3. Results for various models.</a>
+<ul>
+<li><a href="#sec-8-3-1">8.3.1. Base model:</a></li>
+<li><a href="#sec-8-3-2">8.3.2. Random Forest:</a></li>
+<li><a href="#sec-8-3-3">8.3.3. Logistic Regression:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#sec-9">9. Sources And References.</a></li>
+<li><a href="#sec-10">10. Conclusion</a></li>
+</ul>
+</div>
+</div>
+
+<h1 id="problem-statement">Problem Statement:<a id="sec-1" name="sec-1"></a></h1>
+
+<h2 id="introduction">Introduction:<a id="sec-1-1" name="sec-1-1"></a></h2>
+
+<p>Discussing things you care about can be difficult. The threat of abuse
+and harrasment online means that many people stop experssing themselves
+and give up on seeking different opinions. Platforms struggle to 
+efficiently facilitate conversations, leading many communities to limit
+or completely shut down user comments.</p>
+
+<h2 id="problem">Problem:<a id="sec-1-2" name="sec-1-2"></a></h2>
+
+<p>Building a multi-headed model that’s capable of detecting different types
+of toxicity like threats, obscenity, insult and identity-based hate.</p>
+
+<h1 id="motivation">Motivation:<a id="sec-2" name="sec-2"></a></h1>
+
+<p>So far we have a range of publicly available models served through the
+<a href="https://perspectiveapi.com/#/">Perspective API</a>, including toxicity. But the current models still make
+errors, and they don’t allow users to select which type of toxicity
+they’re interested in finding. (e.g. some platforms may be fine with
+profanity, but not with other types of toxic content)</p>
+
+<h1 id="dataset">Dataset:<a id="sec-3" name="sec-3"></a></h1>
+
+<h2 id="data-resource">Data Resource:<a id="sec-3-1" name="sec-3-1"></a></h2>
+
+<p>The dataset used was Wikipedia corpus dataset which was rated by human raters for toxicity. The corpus contains
+comments from discussions relating to use pages and articles dating from 2004-2015. The dataset was hosted on
+Kaggle.</p>
+
+<h2 id="data-overview">Data Overview:<a id="sec-3-2" name="sec-3-2"></a></h2>
+
+<p>The comments were manually classified into following categories</p>
+<ul>
+  <li>toxic</li>
+  <li>severe_toxic</li>
+  <li>obscene</li>
+  <li>threat</li>
+  <li>insult</li>
+  <li>identity_hate</li>
+</ul>
+
+<p>The Dataset had 150k comments which were classified into one or more above categories.
+The problem was to predict the probabilities of 10k comments being classified into multiple categories.</p>
+
+<h1 id="approach">Approach:<a id="sec-4" name="sec-4"></a></h1>
+
+<h2 id="how-probability-was-calculated">How probability was calculated?<a id="sec-4-1" name="sec-4-1"></a></h2>
+
+<p>Though there many multi class classifiers, we didn’t find a suitable multi label classifier which was able
+to give probability with which target belongs to a label.</p>
+
+<p>So, we used <a href="https://scikit-learn.org/stable/modules/generated/sklearn.multiclass.OneVsRestClassifier.html">scikit-learn OneVsRestClassifier</a> with various estimators, with the help of <a href="https://scikit-learn.org/stable/modules/generated/sklearn.multiclass.OneVsRestClassifier.html#sklearn.multiclass.OneVsRestClassifier.predict_proba">predict_proba</a>, we predicted the 
+probability with which a comment belongs to a particular label.</p>
+
+<h1 id="analysis-of-dataset">Analysis of Dataset:<a id="sec-5" name="sec-5"></a></h1>
+
+<h2 id="visualization">Visualization<a id="sec-5-1" name="sec-5-1"></a></h2>
+
+<h3 id="count-of-number-of-comments-in-each-class">Count of number of comments in each class.<a id="sec-5-1-1" name="sec-5-1-1"></a></h3>
+
+<p><img src="/assets/TCC/count.png" alt="img" /></p>
+
+<p>The three major labels are:</p>
+<ul>
+  <li>toxic</li>
+  <li>obscene</li>
+  <li>insult</li>
+</ul>
+
+<h3 id="pie-chart-of-label-distribution-over-commentswithout-none-category">Pie chart of Label Distribution over comments(without “none” category).<a id="sec-5-1-2" name="sec-5-1-2"></a></h3>
+
+<p><img src="/assets/TCC/pie.png" alt="img" /></p>
+
+<h3 id="count-for-each-label-combination">Count for each label combination.<a id="sec-5-1-3" name="sec-5-1-3"></a></h3>
+
+<p>Now, let’s take a look at number of comment for each label combination.This 
+helps us in finding correlation between categories. \newline</p>
+
+<p><img src="/assets/TCC/cat_corr.png" alt="img" /></p>
+
+<p><span class="underline">Following can be inferred from above table:</span></p>
+
+<ul>
+  <li>The table shows that number of comments with only <strong>none</strong> label are high.</li>
+  <li><strong>toxic</strong> which is the lable high after <strong>none</strong> is present in all top 6 combinations.</li>
+  <li>Among the top combinations, <strong>obscene</strong> and <strong>insult</strong> comes 4 times in 6.</li>
+  <li>As the combinations increase (i.e, a comment belonging to more categories) the
+count drops very fast.</li>
+</ul>
+
+<h3 id="correlation-matrix">Correlation matrix.<a id="sec-5-1-4" name="sec-5-1-4"></a></h3>
+
+<p><img src="/assets/TCC/corr.png" alt="img" /></p>
+
+<p><span class="underline">Following can be inferred from above matrix:</span></p>
+<ul>
+  <li><strong>Toxic</strong> is highly correlated with <strong>obscene</strong> and <strong>insult</strong></li>
+  <li><strong>Insult</strong> and <strong>obscene</strong> have <span class="underline"><strong>highest</strong></span> correlation factor of (0.74)</li>
+</ul>
+
+<p><span class="underline">Interesting things to be observed:</span></p>
+<ul>
+  <li>Though a <strong>severe toxic</strong> comment is also a <strong>Toxic</strong> comment, the
+correlation between them is only <span class="underline">0.31</span>.</li>
+</ul>
+
+<h3 id="digging-more-into-correlations-using-venn-diagrams">Digging more into correlations using Venn Diagrams.<a id="sec-5-1-5" name="sec-5-1-5"></a></h3>
+
+<p><img src="/assets/TCC/venn.png" alt="img" /></p>
+
+<p>This venn diagram shows the interpretations inferred from the correlation matrix above.</p>
+
+<p><img src="/assets/TCC/corr_2.png" alt="img" /></p>
+
+<ul>
+  <li>
+    <p>This venn diagram shows that if a comment is <strong>severe toxic</strong> it indeed is also a <strong>toxic</strong>
+      comment.</p>
+  </li>
+  <li>
+    <p>The low correlation factor is explained by the fact that <strong>severe toxic</strong> represents a small
+percentage to <strong>toxic</strong>. This is similar to <span class="underline"><strong>Simpson’s Paradox</strong></span>.</p>
+  </li>
+</ul>
+
+<h3 id="word-analysis-for-each-cateogires">Word analysis for each cateogires.<a id="sec-5-1-6" name="sec-5-1-6"></a></h3>
+
+<p><img src="/assets/TCC/none.png" alt="img" /></p>
+
+<p><img src="/assets/TCC/toxic.png" alt="img" /></p>
+
+<p><img src="/assets/TCC/severe_toxic.png" alt="img" /></p>
+
+<p><img src="/assets/TCC/obscene.png" alt="img" /></p>
+
+<p><img src="/assets/TCC/threat.png" alt="img" /></p>
+
+<p><img src="/assets/TCC/insult.png" alt="img" /></p>
+
+<p><img src="/assets/TCC/identity_hate.png" alt="img" /></p>
+
+<p>The vocabulary used in all categories is quite similar.</p>
+
+<h1 id="feature-engineering">Feature Engineering<a id="sec-6" name="sec-6"></a></h1>
+
+<h2 id="cleaning-the-comments">Cleaning the comments<a id="sec-6-1" name="sec-6-1"></a></h2>
+
+<ul>
+  <li>
+    <p>Since, the comments in the dataset were collected from the internet
+they may contain ‘HTML’ elements in them. So, we removed the HTML from
+the test by using BeautifulSoup.</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>review_text = BeautifulSoup(raw_review).get_text()
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>We then converted each comment into lower case and then splitted it
+into individual words.</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>words = review_text.lower().split()
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>There were some words in the dataset which had length &gt; 100, since there
+are no words in the english language whose length &gt; 100, we wrote a 
+function to remove such words.</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>def remove_big_words(words):
+l = []
+for word in words:
+    if len(word) &lt;= 100:
+        l.append(word)
+return l
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>First, we tried building the features removing stop words and then 
+trained some models thinking that it may help the model in learning
+the semantics of toxicity, but we found out that the model learns
+better if there are stop words in the comment.</p>
+
+    <p>Possible reason is, generally a hate/toxic comment is used
+towards a person, seeing the data we found out that those persons
+are generally referred by pronouns, which are nothing but stop words.</p>
+  </li>
+</ul>
+
+<h2 id="stemmers-and-lemmatizers">Stemmers and Lemmatizers<a id="sec-6-2" name="sec-6-2"></a></h2>
+
+<ol>
+  <li>
+    <p><strong>Definitions</strong>:</p>
+
+    <ul>
+      <li>
+        <p><strong>Stemming</strong> usually refers to a crude heuristic process that chops off
+the ends of words in the hope of achieving this goal correctly most of
+the time, and often includes removal of derivational affixes.</p>
+      </li>
+      <li>
+        <p><strong>Lemmatization</strong> usually refers to doing things properly with the use of
+a vocabulary and morphological analysis of words, normally aiming to
+remove inflectional endings only and to return the base or dictionary
+form of a word, which is known as the lemma.</p>
+
+        <p>(Definitions source: <a href="https://nlp.stanford.edu/IR-book/html/htmledition/stemming-and-lemmatization-1.html">stemming and Lemmatization</a>)</p>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p><strong>Reasons to use</strong>:</p>
+
+    <ul>
+      <li>
+        <p>We used both <a href="https://www.nltk.org/_modules/nltk/stem/snowball.html">snowball stemmer</a>, <a href="https://www.nltk.org/api/nltk.stem.html#module-nltk.stem.porter">porter stemmer</a> and <a href="https://www.nltk.org/_modules/nltk/stem/wordnet.html">wordnet lemmatizer</a>.</p>
+      </li>
+      <li>
+        <p>For gramatical reasons, documents are going to use different forms
+of a word, such as <em>organizes</em>, <em>organize</em> and <em>organizing</em>. But
+they all represent the same semantics. So, using stemmer/Lemmatizer
+for those three words gives a single word, which helps algorithm
+learn better.</p>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p><strong>Results</strong>:</p>
+
+    <ul>
+      <li>
+        <p>On <strong>public Dataset</strong>: (Decreasing order of accuracy)</p>
+
+        <p>Snowball Stemmer &gt; WordNet Lemmatizer &gt; Porter Stemmer</p>
+      </li>
+      <li>
+        <p>On <strong>private Dataset</strong>: (Decreasing order of accuracy)</p>
+
+        <p>WordNet Lemmatizer &gt; Snowball Stemmer &gt; Porter Stemmer</p>
+      </li>
+    </ul>
+  </li>
+</ol>
+
+<h2 id="vectorization">Vectorization<a id="sec-6-3" name="sec-6-3"></a></h2>
+
+<p>Python’s scikit-learn deals with numeric data only. To conver the text data
+into numerical form, <em>tf-idf</em> vectorizer is used. <a href="http://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html">TF-IDF</a> vectorizer converts
+a collection of raw documents to a matrix of Tf-idf features.</p>
+
+<p>We fit the predictor variable on the dataset with tf-idf vectorizer, in
+two different ways. First, by setting the parameter analyzer as ‘word’(select words)
+and the second by setting it to ‘char’(select characters). Using ‘char’ was
+important because the data had many ‘foreign languages’ and they were difficult
+to deal with by considering only the ‘word’ analyzer.</p>
+
+<p>We set the paramater n-gram range (an n-gram is a continguous sequence of
+n-items from a given sample of text or speech). After trying various values, we set the ngram as (1, 1) for
+‘word’ analyzer and (1, 4) for ‘char’ analyzer. We also set the max_features
+as 30000 for both word and char analyzer after many trails.</p>
+
+<p>We then combined the word and character features and transformed the dataset
+into two sparse matrixes for train and test sets, respectively using tf-idf
+vectorizer.</p>
+
+<h2 id="adding-data-related-features">Adding data related features<a id="sec-6-4" name="sec-6-4"></a></h2>
+
+<p>We tried adding features to the dataset that are computed from the data itself.
+Those features are:</p>
+
+<ol>
+  <li>Length of comments</li>
+  <li>Number of exclamation marks - Data showed severe toxic comments with multiple exclamation marks.</li>
+  <li>Number of question marks</li>
+  <li>Number of punctuation symbols - Assumption is that angry people might not use punctuation symbols.</li>
+  <li>Number of symbols - there are some comments with words like f**k, $#*t etc.</li>
+  <li>Number of words</li>
+  <li>Number of unique words - Data showed that angry comments are sometimes repeated many times.</li>
+  <li>Proportion of unique words</li>
+</ol>
+
+<p>Correlation between above features and labels:</p>
+
+<p><img src="/assets/TCC/corr_1_1.jpeg" alt="img" /></p>
+
+<p><img src="/assets/TCC/corr_1_2.jpeg" alt="img" /></p>
+
+<p><span class="underline"><strong>Conclusion</strong></span> from above correlation matrix:</p>
+
+<p>All the above features had correlation of <strong>&lt;</strong> 0.06 with all labels. So, we 
+decided that adding these features doesn’t give benefit the model.</p>
+
+<h1 id="model-building">Model Building<a id="sec-7" name="sec-7"></a></h1>
+
+<p>Our basic pipeline consisted of count vectorizer or a tf-idf vectorizer and
+a classifier. We used OneVsRest Classifier model. We trained the model with
+Logistic Regression (LR), Random Forest(RF) and Gradient Boosting(GB) classifiers.
+Among them LR gave good probabilities with default parameters.</p>
+
+<p>So, we then improved the LR model by changing its parameters.</p>
+
+<h1 id="training-validation-and-test-metrics">Training, Validation and Test Metrics.<a id="sec-8" name="sec-8"></a></h1>
+
+<h2 id="training-and-validation-split">Training and Validation split:<a id="sec-8-1" name="sec-8-1"></a></h2>
+
+<p>To know whether was generalizable or not, we divided the into 
+train and validation sets in 80:20 ratio. We then trained 
+various models on the training data, then we ran the models
+on validation data and we checked whether the model is 
+generalizable or not.</p>
+
+<p>Also, we trained different models on training data and tested
+those on validation data, then we arrived at our best model.</p>
+
+<h2 id="test-metric">Test Metric:<a id="sec-8-2" name="sec-8-2"></a></h2>
+
+<p>We used Receiver Operating Characteristic(ROC) along with Area
+under the curve(AUC) as test metric.</p>
+
+<h2 id="results-for-various-models">Results for various models.<a id="sec-8-3" name="sec-8-3"></a></h2>
+
+<h3 id="base-model">Base model:<a id="sec-8-3-1" name="sec-8-3-1"></a></h3>
+
+<p>We created a model <span class="underline">without any preprocessing or parameter tuning</span>,
+we used this model as our model, and measured our progress using 
+this model.</p>
+
+<p>For this we used Logistic Regression as Classifier.</p>
+
+<ol>
+  <li>
+    <p><strong><span class="underline">Cross Validation Results</span></strong>.</p>
+
+    <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+    
+    
+<colgroup>
+<col class="left" />
+    
+<col class="right" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">Category</th>
+<th scope="col" class="right">CV Score</th>
+</tr>
+</thead>
+    
+<tbody>
+<tr>
+<td class="left">Toxic</td>
+<td class="right">0.9501</td>
+</tr>
+    
+    
+<tr>
+<td class="left">Severe\_toxic</td>
+<td class="right">0.9795</td>
+</tr>
+    
+    
+<tr>
+<td class="left">Obscene</td>
+<td class="right">0.9709</td>
+</tr>
+    
+    
+<tr>
+<td class="left">Threat</td>
+<td class="right">0.9733</td>
+</tr>
+    
+    
+<tr>
+<td class="left">Insult</td>
+<td class="right">0.9608</td>
+</tr>
+    
+    
+<tr>
+<td class="left">Identity\_hate</td>
+<td class="right">0.9548</td>
+</tr>
+</tbody>
+    
+<tbody>
+<tr>
+<td class="left">Average CV</td>
+<td class="right">0.9649</td>
+</tr>
+</tbody>
+</table>
+  </li>
+  <li>
+    <p><strong><span class="underline">ROC-AUC Curve</span></strong>.</p>
+
+    <p><img src="/assets/TCC/base_all.png" alt="img" /></p>
+  </li>
+</ol>
+
+<h3 id="random-forest">Random Forest:<a id="sec-8-3-2" name="sec-8-3-2"></a></h3>
+
+<p>Next, we created our model using Random Forest.
+We used <em>n_estimators = 10</em> and <em>random_state = 1</em> as parameters.</p>
+
+<p>We observed the following results</p>
+
+<ol>
+  <li>
+    <p><strong><span class="underline">Cross Validation Results</span></strong>.</p>
+
+    <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+    
+    
+<colgroup>
+<col class="left" />
+    
+<col class="right" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">Category</th>
+<th scope="col" class="right">CV Score</th>
+</tr>
+</thead>
+    
+<tbody>
+<tr>
+<td class="left">Toxic</td>
+<td class="right">0.8984</td>
+</tr>
+    
+    
+<tr>
+<td class="left">Severe\_toxic</td>
+<td class="right">0.8479</td>
+</tr>
+    
+    
+<tr>
+<td class="left">Obscene</td>
+<td class="right">0.9491</td>
+</tr>
+    
+    
+<tr>
+<td class="left">Threat</td>
+<td class="right">0.6816</td>
+</tr>
+    
+    
+<tr>
+<td class="left">Insult</td>
+<td class="right">0.9183</td>
+</tr>
+    
+    
+<tr>
+<td class="left">Identity\_hate</td>
+<td class="right">0.7782</td>
+</tr>
+</tbody>
+    
+<tbody>
+<tr>
+<td class="left">Average CV</td>
+<td class="right">0.7782</td>
+</tr>
+</tbody>
+</table>
+  </li>
+  <li>
+    <p><strong><span class="underline">ROC-AUC Curve</span></strong>.</p>
+
+    <p><img src="/assets/TCC/rf.png" alt="img" /></p>
+
+    <p>From the Cross Validation results table and ROC-AUC Curve, its clear 
+that Random Forest performs poorly compared to our base model itself,
+So we proceeded to tune parameters for Logistic Regression for better
+accuracy.</p>
+  </li>
+</ol>
+
+<h3 id="logistic-regression">Logistic Regression:<a id="sec-8-3-3" name="sec-8-3-3"></a></h3>
+
+<p><strong><span class="underline">(I)</span></strong></p>
+
+<p>We created one model using <em>C = 4</em> as parameter.
+The following results were observed.</p>
+
+<ol>
+  <li>
+    <p><strong><span class="underline">Cross Validation Results</span></strong>:</p>
+
+    <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+    
+    
+<colgroup>
+<col class="left" />
+    
+<col class="right" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">Category</th>
+<th scope="col" class="right">CV Score</th>
+</tr>
+</thead>
+    
+<tbody>
+<tr>
+<td class="left">Toxic</td>
+<td class="right">0.9690</td>
+</tr>
+    
+    
+<tr>
+<td class="left">Severe\_toxic</td>
+<td class="right">0.9850</td>
+</tr>
+    
+    
+<tr>
+<td class="left">Obscene</td>
+<td class="right">0.9825</td>
+</tr>
+    
+    
+<tr>
+<td class="left">Threat</td>
+<td class="right">0.9856</td>
+</tr>
+    
+    
+<tr>
+<td class="left">Insult</td>
+<td class="right">0.9750</td>
+</tr>
+    
+    
+<tr>
+<td class="left">Identity\_hate</td>
+<td class="right">0.9774</td>
+</tr>
+</tbody>
+    
+<tbody>
+<tr>
+<td class="left">Average CV</td>
+<td class="right">0.9791</td>
+</tr>
+</tbody>
+</table>
+  </li>
+  <li>
+    <p><strong><span class="underline">ROC-AUC Curve</span></strong>.</p>
+
+    <p><img src="/assets/TCC/c=4.png" alt="img" /></p>
+
+    <p><strong><span class="underline">(II)</span></strong></p>
+
+    <p>We created another Logistic Regression by selecting the best parameters
+by crossvalidating the following parameters.</p>
+
+    <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+    
+    
+<colgroup>
+<col class="right" />
+    
+<col class="left" />
+    
+<col class="left" />
+    
+<col class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="right">C</th>
+<th scope="col" class="left">fit\_intercept</th>
+<th scope="col" class="left">penalty</th>
+<th scope="col" class="left">class\_weight</th>
+</tr>
+</thead>
+    
+<tbody>
+<tr>
+<td class="right">1.05</td>
+<td class="left">True</td>
+<td class="left">'l2'</td>
+<td class="left">None</td>
+</tr>
+    
+    
+<tr>
+<td class="right">0.2</td>
+<td class="left">True</td>
+<td class="left">'l2'</td>
+<td class="left">'balanced'</td>
+</tr>
+    
+    
+<tr>
+<td class="right">0.6</td>
+<td class="left">True</td>
+<td class="left">'l2'</td>
+<td class="left">'balanced'</td>
+</tr>
+    
+    
+<tr>
+<td class="right">0.25</td>
+<td class="left">True</td>
+<td class="left">'l2'</td>
+<td class="left">'balanced'</td>
+</tr>
+    
+    
+<tr>
+<td class="right">0.45</td>
+<td class="left">True</td>
+<td class="left">'l2'</td>
+<td class="left">'balanced'</td>
+</tr>
+    
+    
+<tr>
+<td class="right">0.25</td>
+<td class="left">True</td>
+<td class="left">'l2'</td>
+<td class="left">'balanced'</td>
+</tr>
+</tbody>
+</table>
+  </li>
+  <li>
+    <p><strong><span class="underline">Cross Validation Results</span></strong>:</p>
+
+    <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+    
+    
+<colgroup>
+<col class="left" />
+    
+<col class="right" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">Category</th>
+<th scope="col" class="right">CV Score</th>
+</tr>
+</thead>
+    
+<tbody>
+<tr>
+<td class="left">Toxic</td>
+<td class="right">0.9675</td>
+</tr>
+    
+    
+<tr>
+<td class="left">Severe\_toxic</td>
+<td class="right">0.9864</td>
+</tr>
+    
+    
+<tr>
+<td class="left">Obscene</td>
+<td class="right">0.9827</td>
+</tr>
+    
+    
+<tr>
+<td class="left">Threat</td>
+<td class="right">0.9847</td>
+</tr>
+    
+    
+<tr>
+<td class="left">Insult</td>
+<td class="right">0.9761</td>
+</tr>
+    
+    
+<tr>
+<td class="left">Identity\_hate</td>
+<td class="right">0.9764</td>
+</tr>
+</tbody>
+    
+<tbody>
+<tr>
+<td class="left">Average CV</td>
+<td class="right">0.9790</td>
+</tr>
+</tbody>
+</table>
+  </li>
+  <li>
+    <p><strong><span class="underline">ROC-AUC Curve</span></strong>.</p>
+
+    <p><img src="/assets/TCC/c_parameters.png" alt="img" /></p>
+
+    <p><span class="underline"><strong>Though</strong></span>, (I) gave better score compared to (II) on validation set,
+ with difference in order of <em>0.0001</em>.
+ when run on the acutal data (II) was found to better than (I)</p>
+  </li>
+</ol>
+
+<h1 id="sources-and-references">Sources And References.<a id="sec-9" name="sec-9"></a></h1>
+
+<ol>
+  <li><a href="https://blog.citizennet.com/blog/2012/11/10/random-forests-ensembles-and-performance-metrics">https://blog.citizennet.com/blog/2012/11/10/random-forests-ensembles-and-performance-metrics</a></li>
+  <li><a href="https://www.data-to-viz.com/">https://www.data-to-viz.com/</a></li>
+  <li><a href="https://www.kaggle.com/jagangupta/stop-the-s-toxic-comments-eda">https://www.kaggle.com/jagangupta/stop-the-s-toxic-comments-eda</a></li>
+</ol>
+
+<h1 id="conclusion">Conclusion<a id="sec-10" name="sec-10"></a></h1>
+
+<p>After checking the kaggle discussion board of the actual competition, standard Machine Learning 
+approaches yield a maximum score of 0.9792, irrespective of any aprroach. In order to get a 
+large margin over this score one has to employ Deep Learning(DL) techniques.</p>
+:ET

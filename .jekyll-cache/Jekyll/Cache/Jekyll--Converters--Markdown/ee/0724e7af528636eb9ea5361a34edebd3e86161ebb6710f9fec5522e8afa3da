@@ -1,0 +1,122 @@
+I"®<p>I am going to discuss about how i implemented Bag of Visual Words[1], to categorize
+images using python, openCV and Scikit-learn.
+You can find the code for it <a href="https://github.com/ymdatta/BagOfVisualWords">here.</a></p>
+
+<p>Implementing BagOfVisualWords mainly involves these steps:</p>
+<ul>
+  <li>Extracting Features from Images.</li>
+  <li>Getting Descriptors of features, which are used to represent the features.
+    <ul>
+      <li>Extracting features and generating descriptors for them can be done using
+<a href="https://en.wikipedia.org/wiki/Scale-invariant_feature_transform">SIFT</a>, <a href="https://en.wikipedia.org/wiki/Speeded_up_robust_features">SURF</a> etc. I have used SIFT, as itâ€™s descriptor is a 128 dimension
+vector, which means it holds a lot of information of the feature.</li>
+    </ul>
+  </li>
+  <li>Constructing Vocabulary which contains visual words, which are nothing but
+cluster centres.
+    <ul>
+      <li>To extract clusters, first we need data. I have used Caltech-101 dataset
+for images. I randomly took 1000 images, extracted features of those 1000
+images using SIFT. Now we have data, we need to extract cluster centres
+for data. I used <a href="https://en.wikipedia.org/wiki/K-means_clustering">K-Means Clustering</a> algorithm for this purpose. I ran the
+K-Means clustering algorithm on the data(i.e features of images), which
+seperated the data into various clusters.</li>
+    </ul>
+  </li>
+  <li>Representing each image as a feature vector.
+    <ul>
+      <li>For each image we extract the features, and say there are 100 clusters.
+We create a feature vector of shape 1X100, and set all values of vector to 0.
+Now for each feature of the image, we check which cluster center it is
+nearest to, and say if it is nearest to 88th cluster center, we increase
+the value of 88th index in the feature vector by 1. In the end, we get
+a feature vector, which represents the image.</li>
+    </ul>
+  </li>
+  <li>Training Classifier using feature Vectors of Images and their labels,
+ and then predicting the labels of feature Vectors of Unknown Images.
+    <ul>
+      <li>Now, i have created a training and testing data-set using Caltech101.
+The training-testing ratio is 80-20. i.e, i am extracting the feature Vectors
+of all the 100 images in the dataset, but i am showing labels only for 80
+images and asking the classifier to predict for other 20 images.I have used
+<a href="https://en.wikipedia.org/wiki/Support_vector_machine">SVM</a> of Scikit library
+for classification purpose.</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="results">Results:</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Number of categories</th>
+      <th>Accuracy</th>
+      <th>No of clusters used</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>3</td>
+      <td>83%</td>
+      <td>600</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>85%</td>
+      <td>800</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>76%</td>
+      <td>600</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>76%</td>
+      <td>800</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>81%</td>
+      <td>600</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>80%</td>
+      <td>800</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>67%</td>
+      <td>600</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>67%</td>
+      <td>600</td>
+    </tr>
+  </tbody>
+</table>
+
+<ul>
+  <li>Please check the results folder for the confusion matrices obtained.
+ex: confusion matrix of 5 categories with 600 clusters.
+    * <img src="/assets/BOV/k_600_5_categories.png" alt="categorization-of-5-categories-with-600-clusters" /></li>
+</ul>
+
+<p>i have included doc-strings for each function in the <a href="https://github.com/ymdatta/BagOfVisualWords">code</a>, which
+  can help in understanding the code.</p>
+
+<p>For more details regarding how to run the code, please refer to the <a href="https://github.com/ymdatta/BagOfVisualWords/blob/master/README.md">README</a> in
+ the code <a href="https://github.com/ymdatta/BagOfVisualWords">repository</a>.</p>
+
+<h3 id="references">References:</h3>
+<ul>
+  <li>(1)[https://www.cs.cmu.edu/~efros/courses/LBMV07/Papers/csurka-eccv-04.pdf].</li>
+</ul>
+
+<p>Feel free to drop an email, if you find any mistakes or have suggestions regarding
+my approach :).</p>
+:ET

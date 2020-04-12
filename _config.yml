@@ -1,6 +1,6 @@
 # Site settings
-title_left    : "Think"
-title_right   : "space" # default: ""
+title_left    : "ymdatta's weblog"
+title_right   : "" # default: ""
 description   : "Minimalist Jekyll theme for technical writing blog."
 keywords      : "Jekyll, theme, free, download, SEO, blog, web, minimalist, thinkspace"
 url           : https://heiswayi.github.io/thinkspace # site url
@@ -28,7 +28,7 @@ sass:
 
 # Author settings
 author:
-  name     : "John Doe"
+  name     : "ymdatta"
 
 plugins:
   - jekyll-sitemap
