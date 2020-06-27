@@ -1,6 +1,10 @@
 // Typography
-@import url('https://fonts.googleapis.com/css?family=Overpass+Mono:400,700');
-$base-font-family: 'Overpass Mono', monospace;
+// @import url('https://fonts.google
+// apis.com/css?family=Overpass+Mono:400,700');
+// $base-font-family: 'Overpass Mono', monospace;
+
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu&display=swap');
+$base-font-family: 'Ubuntu', sans-serif;
 $heading-font-family: $base-font-family;
 
 // Font Sizes
